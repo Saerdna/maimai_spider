@@ -80,15 +80,26 @@ if __name__ == '__main__':
         for one in relation_one['contacts']:
             if one['mmid'].isdigit() == False:
                 continue
-            print >> sys.stderr, one['name'], relation_one.get('remain', 0)
+            print >> sys.stderr, one['name'], one['mmid'], relation_one.get('remain', 0)
+            cur.execute("select json from user_info where mmid = '%s'" % (one['mmid']))
+            record = cur.fetchone()
+            if record != None:
+                json_buf = record[0]
+                if json.loads(json_buf).get('error_code', 0) == 0:
+                    print >> sys.stderr, one['name'], one['mmid'], "has crawled"
+                    continue
             detail = spider.get_detail(one['mmid'])
-            time.sleep(random.randint(5, 10))
+            if detail.get('error_code', 0) != 0:
+                print >> sys.stderr, "crawl too faster"
+                time.sleep(30 * 60)
+            time.sleep(random.randint(5, 30))
             try:
-                cur.execute("insert into user_info(mmid, json) values('%s', '%s')" % (one['mmid'], json.dumps(detail)))
+                cur.execute("insert or replace into user_info(mmid, json) values('%s', '%s')" % (one['mmid'], json.dumps(detail)))
                 conn.commit()
             except Exception as Exc:
-                print >> sys.stderr, Exc
+                print >> sys.stderr, Exc, one['name'],one['mmid']
         relation_one = spider.get_degree(1, page_no)
+        time.sleep(random.randint(5, 13))
         page_no += 1
 
     relation_two = spider.get_degree(2, 0)
@@ -97,15 +108,26 @@ if __name__ == '__main__':
         for one in relation_two['contacts']:
             if one['mmid'].isdigit() == False:
                 continue
-            print >> sys.stderr, one['name'], relation_two.get('remain', 0)
+            print >> sys.stderr, one['name'], one['mmid'], relation_two.get('remain', 0)
+            cur.execute("select json from user_info where mmid = '%s'" % (one['mmid']))
+            record = cur.fetchone()
+            if record != None:
+                json_buf = record[0]
+                if json.loads(json_buf).get('error_code', 0) == 0:
+                    print >> sys.stderr, one['name'], one['mmid'], "has crawled"
+                    continue
             detail = spider.get_detail(one['mmid'])
-            time.sleep(random.randint(5, 10))
+            if detail.get('error_code', 0) != 0:
+                print >> sys.stderr, "crawl too faster"
+                time.sleep(30 * 60)
+            time.sleep(random.randint(5, 30))
             try:
-                cur.execute("insert into user_info(mmid, json) values('%s', '%s')" % (one['mmid'], json.dumps(detail)))
+                cur.execute("insert or replace into user_info(mmid, json) values('%s', '%s')" % (one['mmid'], json.dumps(detail)))
                 conn.commit()
             except Exception as Exc:
-                print >> sys.stderr, Exc
+                print >> sys.stderr, Exc, one['name'],one['mmid']
         relation_two = spider.get_degree(2, page_no)
+        time.sleep(random.randint(5, 13))
         page_no += 1
 
     conn.close()
